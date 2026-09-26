@@ -64,6 +64,7 @@ footer{text-align:center;padding:25px;color:var(--muted);padding-bottom:calc(25p
 .regBox{background:var(--card);border-radius:18px;padding:26px;max-width:400px;width:100%;box-shadow:0 10px 30px #00000030}
 .regBox h2{margin:0 0 6px;color:var(--brand1)}
 .regBox p{margin:0 0 16px;color:var(--muted)}
+.siteNotice{background:#e8f9ee;color:var(--brand1);border-radius:10px;padding:11px 14px;font-size:13px;line-height:1.8;margin-bottom:16px}
 .regBox button{background:var(--accent);color:#fff;width:100%;font-size:16px;padding:13px}
 .welcome{background:#e8f9ee;color:var(--brand1);border-radius:12px;padding:10px 16px;margin-bottom:14px;font-weight:bold}
 .profileBar{display:flex;align-items:center;gap:12px;background:#e8f9ee;border-radius:14px;padding:12px 16px;margin-bottom:14px}
@@ -82,11 +83,14 @@ footer{text-align:center;padding:25px;color:var(--muted);padding-bottom:calc(25p
 
 <div id="regOverlay">
  <div class="regBox">
-  <h2>أهلاً بيك</h2>
-  <p>قبل ما تدخل للموقع، سجل بياناتك:</p>
+  <h2>أهلاً بيك 👋</h2>
+  <div class="siteNotice">🛡️ الموقع آمن تماماً من أي فايروس، وهو خاص بصاحبه <b>قاسم الأسدي</b>.<br>سجّل اسمك وادخل للموقع.<br>المشاهدة وقطع البيع خاصة بمكتب العقيلة قاسم الأسدي.</div>
   <label>الاسم</label><input id="cName" placeholder="اسمك الكامل">
-  <label>رقم الهاتف</label><input id="cPhone" placeholder="07xxxxxxxxx">
-  <label>العنوان</label><input id="cAddress" placeholder="المنطقة / أقرب نقطة دالة">
+  <label>صورتك (اختياري)</label>
+  <div class="profileImgRow">
+   <div id="regAvatar" class="avatar">👤</div>
+   <div style="flex:1"><input type="file" id="regImageInput" accept="image/*" onchange="onRegImageSelected(event)"></div>
+  </div>
   <button onclick="registerCustomer()">دخول للموقع</button>
  </div>
 </div>
@@ -103,8 +107,6 @@ footer{text-align:center;padding:25px;color:var(--muted);padding-bottom:calc(25p
    </div>
   </div>
   <label>الاسم</label><input id="pName" placeholder="اسمك الكامل">
-  <label>رقم الهاتف</label><input id="pPhone" placeholder="07xxxxxxxxx">
-  <label>العنوان</label><input id="pAddress" placeholder="المنطقة / أقرب نقطة دالة">
   <button onclick="saveProfile()">حفظ التعديلات</button>
   <a href="#" class="logout" onclick="closeProfileEdit();return false">إلغاء</a>
  </div>
@@ -151,6 +153,7 @@ var products = (function(){
 })();
 
 var pendingProfileImage=null, profileImageRemoved=false;
+var pendingRegImage=null;
 
 function esc(s){return String(s).replace(/[&<>"']/g,function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m];});}
 
@@ -173,25 +176,51 @@ function initRegistration(){
 function notifyShopNewCustomer(c){
  var text="زبون جديد سجل بالموقع 🆕%0A";
  text+="الاسم: "+encodeURIComponent(c.name)+"%0A";
- text+="رقم الهاتف: "+encodeURIComponent(c.phone)+"%0A";
- text+="العنوان: "+encodeURIComponent(c.address||"غير مذكور");
+ text+="الصورة: "+encodeURIComponent(c.photo?"مرفقة بملفه بالموقع":"لم يضف صورة");
  window.open("https://wa.me/"+WA+"?text="+text,"_blank");
 }
 function registerCustomer(){
  var name=document.getElementById("cName").value.trim();
- var phone=document.getElementById("cPhone").value.trim();
- var address=document.getElementById("cAddress").value.trim();
  if(!name){alert("لازم تكتب الاسم");return;}
- if(!phone){alert("لازم تكتب رقم الهاتف");return;}
- if(!address){alert("لازم تكتب العنوان");return;}
- var c={name:name,phone:phone,address:address,photo:""};
+ var c={name:name,photo:pendingRegImage||""};
  localStorage.setItem("customer",JSON.stringify(c));
  var list=JSON.parse(localStorage.getItem("customersList")||"[]");
- list.push({name:name,phone:phone,address:address,date:new Date().toLocaleString("ar-IQ")});
+ list.push({name:name,date:new Date().toLocaleString("ar-IQ")});
  localStorage.setItem("customersList",JSON.stringify(list));
  document.getElementById("regOverlay").classList.add("hidden");
  renderProfileBar(c);
  notifyShopNewCustomer(c);
+}
+function resizeImageToDataUrl(file,size,cb){
+ var objectUrl=URL.createObjectURL(file);
+ var img=new Image();
+ img.onload=function(){
+  var canvas=document.createElement("canvas");
+  canvas.width=size; canvas.height=size;
+  var ctx=canvas.getContext("2d");
+  var scale=Math.max(size/img.width,size/img.height);
+  var w=img.width*scale, h=img.height*scale;
+  ctx.drawImage(img,(size-w)/2,(size-h)/2,w,h);
+  try{
+   cb(canvas.toDataURL("image/jpeg",0.85));
+  }catch(err){
+   alert("تعذرت معالجة الصورة، جرب صورة ثانية");
+  }
+  URL.revokeObjectURL(objectUrl);
+ };
+ img.onerror=function(){
+  alert("تعذر تحميل هذه الصورة، جرب صورة ثانية");
+  URL.revokeObjectURL(objectUrl);
+ };
+ img.src=objectUrl;
+}
+function onRegImageSelected(e){
+ var file=e.target.files[0];
+ if(!file)return;
+ resizeImageToDataUrl(file,160,function(dataUrl){
+  pendingRegImage=dataUrl;
+  renderAvatar(document.getElementById("regAvatar"),pendingRegImage);
+ });
 }
 function onProfileImageSelected(e){
  var file=e.target.files[0];
@@ -230,12 +259,10 @@ function removeProfileImage(){
  document.getElementById("removeProfileImgBtn").classList.add("hidden");
 }
 function openProfileEdit(){
- var c=JSON.parse(localStorage.getItem("customer")||"null")||{name:"",phone:"",address:"",photo:""};
+ var c=JSON.parse(localStorage.getItem("customer")||"null")||{name:"",photo:""};
  pendingProfileImage=null;
  profileImageRemoved=false;
  document.getElementById("pName").value=c.name||"";
- document.getElementById("pPhone").value=c.phone||"";
- document.getElementById("pAddress").value=c.address||"";
  document.getElementById("profileImageInput").value="";
  renderAvatar(document.getElementById("profileEditAvatar"),c.photo||"");
  document.getElementById("removeProfileImgBtn").classList.toggle("hidden",!c.photo);
@@ -246,29 +273,23 @@ function closeProfileEdit(){
 }
 function saveProfile(){
  var name=document.getElementById("pName").value.trim();
- var phone=document.getElementById("pPhone").value.trim();
- var address=document.getElementById("pAddress").value.trim();
  if(!name){alert("لازم تكتب الاسم");return;}
- if(!phone){alert("لازم تكتب رقم الهاتف");return;}
- if(!address){alert("لازم تكتب العنوان");return;}
  var old=JSON.parse(localStorage.getItem("customer")||"null")||{photo:""};
  var photo = pendingProfileImage ? pendingProfileImage : (profileImageRemoved ? "" : (old.photo||""));
- var c={name:name,phone:phone,address:address,photo:photo};
+ var c={name:name,photo:photo};
  localStorage.setItem("customer",JSON.stringify(c));
  renderProfileBar(c);
 
  closeProfileEdit();
 }
 function order(p){
- var c=JSON.parse(localStorage.getItem("customer")||"null")||{name:"",phone:"",address:""};
+ var c=JSON.parse(localStorage.getItem("customer")||"null")||{name:""};
  var text="";
  text+="السلام عليكم، أريد طلب سلعة:%0A";
  text+="السلعة: "+encodeURIComponent(p.name)+"%0A";
  text+="السعر: "+encodeURIComponent(p.price||"غير محدد")+"%0A";
  text+="المواصفات: "+encodeURIComponent(p.desc||"لا توجد")+"%0A";
- text+="اسم الزبون: "+encodeURIComponent(c.name)+"%0A";
- text+="رقم الزبون: "+encodeURIComponent(c.phone)+"%0A";
- text+="عنوان الزبون: "+encodeURIComponent(c.address||"غير مذكور");
+ text+="اسم الزبون: "+encodeURIComponent(c.name);
  location.href="https://wa.me/"+WA+"?text="+text;
 }
 function orderProduct(id){
