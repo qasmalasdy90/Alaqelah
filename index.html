@@ -173,12 +173,6 @@ function initRegistration(){
   renderProfileBar(c);
  }
 }
-function notifyShopNewCustomer(c){
- var text="زبون جديد سجل بالموقع 🆕%0A";
- text+="الاسم: "+encodeURIComponent(c.name)+"%0A";
- text+="الصورة: "+encodeURIComponent(c.photo?"مرفقة بملفه بالموقع":"لم يضف صورة");
- window.open("https://wa.me/"+WA+"?text="+text,"_blank");
-}
 function registerCustomer(){
  var name=document.getElementById("cName").value.trim();
  if(!name){alert("لازم تكتب الاسم");return;}
@@ -189,7 +183,6 @@ function registerCustomer(){
  localStorage.setItem("customersList",JSON.stringify(list));
  document.getElementById("regOverlay").classList.add("hidden");
  renderProfileBar(c);
- notifyShopNewCustomer(c);
 }
 function resizeImageToDataUrl(file,size,cb){
  var objectUrl=URL.createObjectURL(file);
