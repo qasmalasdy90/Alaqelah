@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>لوحة الإدارة - مكتب العقيلة قاسم الأسدي</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#d5dbea;--brand1:#075e54;--brand2:#128c7e;--accent:#25d366;--danger:#c62828;--inputBg:#eef7f2;
+padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f1420;--card:#171f2e;--text:#e8edf7;--muted:#9aa6bd;--line:#2b354a;--inputBg:#1c2b26}}
+:root[data-theme="dark"]{--bg:#0f1420;--card:#171f2e;--text:#e8edf7;--muted:#9aa6bd;--line:#2b354a;--inputBg:#1c2b26}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{background:linear-gradient(135deg,var(--brand1),var(--brand2));color:#fff;padding:22px 18px;text-align:center;padding-top:calc(22px + env(safe-area-inset-top,0px))}
+header h1{margin:0;font-size:22px}
+.container{max-width:900px;margin:auto;padding:18px}
+.card{background:var(--card);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 5px 20px #00000014}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;margin:5px 0 12px;font:inherit;background:var(--inputBg);color:var(--text)}
+label{font-weight:bold;font-size:13px;display:inline-block;background:linear-gradient(135deg,var(--brand1),var(--brand2));color:#fff;padding:5px 14px;border-radius:14px;margin-bottom:4px}
+button{border:0;border-radius:10px;padding:10px 16px;cursor:pointer;font-weight:bold;font-family:inherit}
+.btn{background:var(--accent);color:#fff}
+.btn-del{background:var(--danger);color:#fff}
+.btn-edit{background:#eef2f8;color:var(--text);border:1px solid var(--line)}
+.tabs{display:flex;gap:10px;margin-bottom:16px}
+.tab{flex:1;padding:12px;text-align:center;background:var(--card);border-radius:12px;cursor:pointer;font-weight:bold;color:var(--muted)}
+.tab.active{background:var(--brand1);color:#fff}
+table{width:100%;border-collapse:collapse}
+th,td{padding:9px 6px;border-bottom:1px solid var(--line);text-align:right;font-size:14px}
+.hidden{display:none!important}
+.prodRow{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.prodRow img{width:56px;height:56px;object-fit:cover;border-radius:10px;background:#e9eef5}
+.prodInfo{flex:1}
+.prodInfo b{display:block}
+.prodBtns{display:flex;gap:6px}
+.row2{display:flex;gap:10px}
+.row2>div{flex:1}
+.muted{color:var(--muted);font-size:13px}
+#loginBox{max-width:340px;margin:60px auto}
+.catGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin:6px 0 10px}
+.catCard{border-radius:18px;padding:22px 14px;text-align:center;cursor:pointer;box-shadow:0 6px 18px #00000022;transition:transform .15s;color:#fff}
+.catCard:active{transform:scale(0.97)}
+.catIcon{width:52px;height:52px;margin:0 auto 10px}
+.catIcon svg{width:100%;height:100%}
+.catName{font-size:15px;font-weight:bold}
+.catCount{font-size:12px;opacity:0.9;margin-top:4px}
+.backBar{display:inline-block;color:var(--brand1);font-weight:bold;cursor:pointer;margin-bottom:14px;padding:9px 18px;background:var(--card);border:1px solid var(--line);border-radius:24px;box-shadow:0 3px 10px #00000014}
+.navHead{font-size:19px;font-weight:bold;margin:4px 0 14px;padding:10px 14px;border-radius:12px;color:#fff}
+#formTitle{display:inline-block;background:linear-gradient(135deg,var(--brand1),var(--brand2));color:#fff;padding:9px 18px;border-radius:12px;font-size:17px;margin:4px 0 14px}
+</style>
+</head>
+<body>
+
+<header><h1>لوحة إدارة الموقع</h1></header>
+
+<div class="container">
+
+<div id="loginBox" class="card">
+ <label>كلمة المرور</label>
+ <input id="pwInput" type="password" onkeydown="if(event.key==='Enter')checkLogin()">
+ <button class="btn" style="width:100%" onclick="checkLogin()">دخول</button>
+</div>
+
+<div id="adminArea" class="hidden">
+ <div class="tabs">
+  <div class="tab active" id="tabBtnCust" onclick="showTab('cust')">الزباين المسجلين</div>
+  <div class="tab" id="tabBtnProd" onclick="showTab('prod')">إدارة السلع</div>
+ </div>
+
+ <div id="tabCust">
+  <div class="card">
+   <button class="btn-edit" onclick="loadCustomers()">تحديث القائمة 🔄</button>
+   <div id="custStatus" class="muted"></div>
+   <table id="custTable"><thead><tr><th>التاريخ</th><th>الاسم</th><th>الهاتف</th><th>العنوان</th></tr></thead><tbody></tbody></table>
+  </div>
+ </div>
+
+ <div id="tabProd" class="hidden">
+  <div class="card" id="prodNavCard">
+   <div id="prodNav"></div>
+  </div>
+ </div>
+</div>
+</div>
+
+<script>
+// ==== إعدادات ====
+var ADMIN_PASSWORD = "1234"; // غيّرها لكلمة مرور خاصة فيك
+var CATEGORIES={"أجهزة الإنترنت":["راوترات","شاحن نانو وراوتر","شاحن USB راوتر وكاميرات","كيبلات انترنت"],"أجهزة الهواتف":["شاحن تايب سي","شاحن آيفون","شاحن كالكسي","كيبل كالكسي","كيبل تايب سي","كيبل آيفون"],"أجهزة كاميرات المراقبة":["كاميرات مراقبة","أجهزة تسجيل DVR/NVR","هارد كاميرات","كيبلات كاميرات","محولات طاقة كاميرات"]};
+var CATEGORY_ICONS={
+"أجهزة الإنترنت":'<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="55" width="80" height="30" rx="8" fill="#fff" opacity="0.15"/><rect x="16" y="61" width="68" height="18" rx="5" fill="#fff"/><circle cx="28" cy="70" r="3.5" fill="#25d366"/><circle cx="40" cy="70" r="3.5" fill="#fff" opacity="0.5"/><path d="M50 45 q0 -22 22 -22" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.9"/><path d="M50 45 q0 -34 34 -34" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.55"/><path d="M50 45 q0 -10 10 -10" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/></svg>',
+"أجهزة الهواتف":'<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="32" y="12" width="36" height="76" rx="9" fill="#fff"/><rect x="37" y="22" width="26" height="48" rx="2" fill="#1565c0"/><circle cx="50" cy="78" r="4" fill="#1565c0"/></svg>',
+"أجهزة كاميرات المراقبة":'<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="40" width="16" height="13" rx="3" fill="#fff" opacity="0.55"/><rect x="20" y="30" width="58" height="32" rx="11" fill="#fff"/><circle cx="65" cy="46" r="14" fill="#c62828"/><circle cx="65" cy="46" r="7" fill="#fff"/><rect x="30" y="63" width="12" height="11" rx="2" fill="#fff" opacity="0.55"/></svg>'
+};
+var CATEGORY_COLORS={
+"أجهزة الإنترنت":"linear-gradient(135deg,#075e54,#128c7e)",
+"أجهزة الهواتف":"linear-gradient(135deg,#1565c0,#42a5f5)",
+"أجهزة كاميرات المراقبة":"linear-gradient(135deg,#263238,#c62828)"
+};
+var CATEGORY_SOLID={
+"أجهزة الإنترنت":"#075e54",
+"أجهزة الهواتف":"#1565c0",
+"أجهزة كاميرات المراقبة":"#c62828"
+};
+var SUBCAT_COLORS={
+"راوترات":"#0d47a1",
+"شاحن نانو وراوتر":"#00897b",
+"شاحن USB راوتر وكاميرات":"#6d4c41",
+"كيبلات انترنت":"#558b2f",
+"شاحن تايب سي":"#f57f17",
+"شاحن آيفون":"#ad1457",
+"شاحن كالكسي":"#4527a0",
+"كيبل كالكسي":"#00838f",
+"كيبل تايب سي":"#d84315",
+"كيبل آيفون":"#2e7d32",
+"كاميرات مراقبة":"#b71c1c",
+"أجهزة تسجيل DVR/NVR":"#4e342e",
+"هارد كاميرات":"#37474f",
+"كيبلات كاميرات":"#f9a825",
+"محولات طاقة كاميرات":"#6a1b9a"
+};
+
+var pendingProductImages=[], editingId=null, currentProducts=[];
+var navMain=null, navSub=null;
+
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m];});}
+
+function checkLogin(){
+ if(document.getElementById("pwInput").value===ADMIN_PASSWORD){
+  document.getElementById("loginBox").classList.add("hidden");
+  document.getElementById("adminArea").classList.remove("hidden");
+  loadCustomers();
+  renderProdNav();
+ } else { alert("كلمة المرور غلط"); }
+}
+
+function showTab(t){
+ document.getElementById("tabCust").classList.toggle("hidden",t!=="cust");
+ document.getElementById("tabProd").classList.toggle("hidden",t!=="prod");
+ document.getElementById("tabBtnCust").classList.toggle("active",t==="cust");
+ document.getElementById("tabBtnProd").classList.toggle("active",t==="prod");
+}
+
+function loadCustomers(){
+ var list=JSON.parse(localStorage.getItem("customersList")||"[]");
+ var tbody=document.querySelector("#custTable tbody");
+ tbody.innerHTML="";
+ list.slice().reverse().forEach(function(row){
+  var tr=document.createElement("tr");
+  tr.innerHTML="<td>"+esc(row.date)+"</td><td>"+esc(row.name)+"</td><td>"+esc(row.phone)+"</td><td>"+esc(row.address)+"</td>";
+  tbody.appendChild(tr);
+ });
+ document.getElementById("custStatus").textContent="عدد الزباين: "+list.length+" (المسجلين من نفس هذا المتصفح)";
+}
+
+function getAllProducts(){ return JSON.parse(localStorage.getItem("products")||"[]"); }
+
+function renderProdNav(){
+ var el=document.getElementById("prodNav");
+ var all=getAllProducts();
+
+ if(!navMain){
+  var html='<h3>إدارة السلع - اختر القسم</h3><div class="catGrid">';
+  Object.keys(CATEGORIES).forEach(function(main){
+   var icon=CATEGORY_ICONS[main]||"";
+   var bg=CATEGORY_COLORS[main]||"linear-gradient(135deg,var(--brand1),var(--brand2))";
+   var count=all.filter(function(p){return p.mainCat===main;}).length;
+   html+='<div class="catCard" style="background:'+bg+'" onclick="navToMain(\''+esc(main).replace(/'/g,"\\'")+'\')">'+
+    '<div class="catIcon">'+icon+'</div><div class="catName">'+esc(main)+'</div><div class="catCount">'+count+' سلعة</div></div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
+  return;
+ }
+
+ if(navMain && !navSub){
+  var subs=CATEGORIES[navMain]||[];
+  var mc=CATEGORY_SOLID[navMain]||"#667085";
+  var html='<div class="backBar" onclick="navBackHome()">⟵ رجوع للأقسام</div>';
+  html+='<div class="navHead" style="background:'+mc+'">'+esc(navMain)+'</div>';
+  html+='<div class="catGrid">';
+  subs.forEach(function(sub){
+   var sc=SUBCAT_COLORS[sub]||"#667085";
+   var count=all.filter(function(p){return p.mainCat===navMain && p.subCat===sub;}).length;
+   html+='<div class="catCard" style="background:'+sc+'" onclick="navToSub(\''+esc(sub).replace(/'/g,"\\'")+'\')">'+
+    '<div class="catName">'+esc(sub)+'</div><div class="catCount">'+count+' سلعة</div></div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
+  return;
+ }
+
+ // navMain && navSub: show add-form + product list scoped to this subcategory
+ var sc=SUBCAT_COLORS[navSub]||"#667085";
+ var mc=CATEGORY_SOLID[navMain]||"#667085";
+ var inSub=all.filter(function(p){return p.mainCat===navMain && p.subCat===navSub;});
+ currentProducts=inSub;
+ var html='<div class="backBar" onclick="navBackToMain()">⟵ رجوع لـ'+esc(navMain)+'</div>';
+ html+='<div class="navHead" style="background:'+sc+'">'+esc(navMain)+' / '+esc(navSub)+'</div>';
+ html+='<h3 id="formTitle">إضافة سلعة جديدة</h3>';
+ html+='<label>اسم السلعة</label><input id="pName">';
+ html+='<label>السعر</label><input id="pPrice">';
+ html+='<label>المواصفات</label><textarea id="pDesc" rows="2"></textarea>';
+ html+='<label>صور السلعة (تكدر تختار أكثر من صورة)</label><input type="file" id="pImage" accept="image/*" multiple onchange="onProdImageSelected(event)">';
+ html+='<div id="pImgPreview" class="muted"></div>';
+ html+='<div style="margin-top:10px;display:flex;gap:8px">';
+ html+='<button class="btn" onclick="saveProduct()">حفظ</button>';
+ html+='<button class="btn-edit hidden" id="cancelEditBtn" onclick="resetForm()">إلغاء التعديل</button>';
+ html+='</div>';
+ html+='<hr style="margin:18px 0;border:none;border-top:1px solid var(--line)">';
+ html+='<div class="muted" style="margin-bottom:8px">عدد السلع بهذا الفرع: '+inSub.length+'</div>';
+ html+='<div id="prodList">'+(inSub.map(function(p){
+  var img=p.image?'<img src="'+esc(p.image)+'">':'<div style="width:56px;height:56px;border-radius:10px;background:#e9eef5"></div>';
+  return '<div class="prodRow">'+img+'<div class="prodInfo"><b>'+esc(p.name)+'</b><span class="muted">'+esc(p.price)+'</span></div>'+
+   '<div class="prodBtns"><button class="btn-edit" onclick="editProduct(\''+esc(p.id)+'\')">تعديل</button><button class="btn-del" onclick="deleteProduct(\''+esc(p.id)+'\')">حذف</button></div></div>';
+ }).join("") || '<div class="muted">لا توجد سلع بعد بهذا الفرع</div>')+'</div>';
+ el.innerHTML=html;
+}
+
+function navToMain(main){ navMain=main; navSub=null; renderProdNav(); window.scrollTo(0,0); }
+function navToSub(sub){ navSub=sub; editingId=null; pendingProductImages=[]; renderProdNav(); window.scrollTo(0,0); }
+function navBackHome(){ navMain=null; navSub=null; renderProdNav(); }
+function navBackToMain(){ navSub=null; editingId=null; pendingProductImages=[]; renderProdNav(); }
+
+function onProdImageSelected(e){
+ var files=Array.prototype.slice.call(e.target.files||[]);
+ if(!files.length)return;
+ pendingProductImages=[];
+ var remaining=files.length;
+ document.getElementById("pImgPreview").textContent="جاري تجهيز الصور...";
+ files.forEach(function(file,idx){
+  var objectUrl=URL.createObjectURL(file);
+  var img=new Image();
+  img.onload=function(){
+   var size=500;
+   var scale=Math.min(size/img.width,size/img.height,1);
+   var w=img.width*scale,h=img.height*scale;
+   var canvas=document.createElement("canvas"); canvas.width=w; canvas.height=h;
+   canvas.getContext("2d").drawImage(img,0,0,w,h);
+   pendingProductImages[idx]=canvas.toDataURL("image/jpeg",0.8);
+   URL.revokeObjectURL(objectUrl);
+   remaining--;
+   if(remaining===0){
+    document.getElementById("pImgPreview").textContent="تم اختيار "+pendingProductImages.length+" صورة ✓";
+   }
+  };
+  img.src=objectUrl;
+ });
+}
+
+function editProduct(id){
+ var p=currentProducts.find(function(x){return String(x.id)===String(id);});
+ if(!p)return;
+ editingId=p.id;
+ renderProdNav();
+ document.getElementById("formTitle").textContent="تعديل سلعة";
+ document.getElementById("pName").value=p.name;
+ document.getElementById("pPrice").value=p.price;
+ document.getElementById("pDesc").value=p.desc;
+ pendingProductImages=(p.images && p.images.length)?p.images.slice():(p.image?[p.image]:[]);
+ document.getElementById("pImgPreview").textContent=pendingProductImages.length?("الصور الحالية محفوظة ("+pendingProductImages.length+") - اختر صور جديدة لتغييرها"):"";
+ document.getElementById("cancelEditBtn").classList.remove("hidden");
+ window.scrollTo(0,0);
+}
+function resetForm(){
+ editingId=null; pendingProductImages=[];
+ renderProdNav();
+}
+
+function saveProduct(){
+ var name=document.getElementById("pName").value.trim();
+ if(!name){alert("لازم تكتب اسم السلعة");return;}
+ var list=getAllProducts();
+ var data={id:editingId?editingId:Date.now(),mainCat:navMain,subCat:navSub,name:name,price:document.getElementById("pPrice").value.trim(),desc:document.getElementById("pDesc").value.trim(),images:pendingProductImages.slice(),image:pendingProductImages[0]||""};
+ if(editingId){
+  list=list.filter(function(p){return String(p.id)!==String(editingId);});
+ }
+ list.push(data);
+ localStorage.setItem("products",JSON.stringify(list));
+ editingId=null; pendingProductImages=[];
+ renderProdNav();
+}
+
+function deleteProduct(id){
+ if(!confirm("تأكيد حذف هذه السلعة؟"))return;
+ var list=getAllProducts();
+ list=list.filter(function(p){return String(p.id)!==String(id);});
+ localStorage.setItem("products",JSON.stringify(list));
+ renderProdNav();
+}
+</script>
+</body>
+</html>
