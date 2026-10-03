@@ -224,24 +224,37 @@ function renderAvatar(el,photo){
 function renderProfileBar(c){
  document.getElementById("profileName").textContent="أهلاً بيك "+c.name+" 👋";
  var numEl=document.getElementById("profileRegNumber");
- if(c.regNumber){
-  numEl.textContent="رقم تسجيلك: #"+c.regNumber;
-  numEl.classList.remove("hidden");
- } else {
-  numEl.classList.add("hidden");
- }
+ if(numEl) numEl.classList.add("hidden");
  renderAvatar(document.getElementById("profileAvatar"),c.photo||"");
  document.getElementById("profileBar").classList.remove("hidden");
+ ensureRegNumber(c);
  updateTotalRegisteredCount();
+}
+var assigningReg=false;
+function ensureRegNumber(c){
+ if(c.regNumber || assigningReg) return;
+ assigningReg=true;
+ getNextRegistrationNumber().then(function(n){
+  var cur=JSON.parse(localStorage.getItem("customer")||"null");
+  if(cur && !cur.regNumber){
+   cur.regNumber=n;
+   localStorage.setItem("customer",JSON.stringify(cur));
+  }
+  updateTotalRegisteredCount();
+ }).catch(function(){}).then(function(){ assigningReg=false; });
 }
 function updateTotalRegisteredCount(){
  var el=document.getElementById("profileTotalCount");
  if(!el)return;
+ var me=null;
+ try{ me=JSON.parse(localStorage.getItem("customer")||"null"); }catch(e){}
+ var mine=(me && me.regNumber) ? ("رقمك: #"+me.regNumber) : "";
  getCurrentRegistrationCount().then(function(total){
-  el.textContent="إجمالي المسجلين: "+total;
+  el.textContent="إجمالي المسجلين: "+total+(mine?"  •  "+mine:"");
   el.classList.remove("hidden");
  }).catch(function(){
-  el.classList.add("hidden");
+  if(mine){ el.textContent=mine; el.classList.remove("hidden"); }
+  else { el.classList.add("hidden"); }
  });
 }
 function initRegistration(){
@@ -359,6 +372,7 @@ function saveProfile(){
  var old=JSON.parse(localStorage.getItem("customer")||"null")||{photo:""};
  var photo = pendingProfileImage ? pendingProfileImage : (profileImageRemoved ? "" : (old.photo||""));
  var c={name:name,photo:photo};
+ if(old.regNumber) c.regNumber=old.regNumber;
  localStorage.setItem("customer",JSON.stringify(c));
  renderProfileBar(c);
 
