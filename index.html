@@ -271,6 +271,11 @@ function registerCustomer(){
   localStorage.setItem("customersList",JSON.stringify(list));
   document.getElementById("regOverlay").classList.add("hidden");
   renderProfileBar(c);
+  try {
+   if (window.parent && window.parent !== window) {
+    window.parent.postMessage({type:"aqila-trial-login"}, "*");
+   }
+  } catch(e){}
  }).catch(function(e){
   alert("تعذر التسجيل. تأكد من اتصالك بالإنترنت وحاول مرة أخرى.");
   btn.disabled=false;
