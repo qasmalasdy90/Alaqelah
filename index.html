@@ -155,18 +155,9 @@ footer{text-align:center;padding:25px;color:var(--muted);padding-bottom:calc(25p
 </main>
 
 <div style="text-align:center; margin:10px 15px 20px 15px;">
-	<button onclick="useInternet()" style="background:#2255AA; color:#fff; width:100%; max-width:320px; font-size:16px; padding:14px; border-radius:10px; font-weight:bold;">استخدم الإنترنت</button>
+	<a href="http://www.qasm.com/gointernet.html" style="display:inline-block; background:#2255AA; color:#fff; width:100%; max-width:320px; font-size:16px; padding:14px; border-radius:10px; font-weight:bold; text-decoration:none; box-sizing:border-box;">استخدم الإنترنت</a>
 </div>
 <footer>مكتب العقيلة قاسم الأسدي</footer>
-<script>
-function useInternet(){
- try {
-  if (window.parent && window.parent !== window) {
-   window.parent.postMessage({type:"aqila-trial-login"}, "*");
-  }
- } catch(e){}
-}
-</script>
 
 <script>
 var WA="9647705663837";
